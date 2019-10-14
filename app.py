@@ -61,6 +61,17 @@ def insertPeople(table, firstname, lastname):
     closeCursor(cursor)
     disconnectDatabase(cnx)
 
+def insertMovieQuery(table, title, original_title, synopsis, duration, rating, release_date):
+    return ("INSERT INTO {} (title, original_title, synopsis, duration, rating, release_date) VALUES('{}', '{}', '{}', '{}', '{}','{}')".format(table, title, original_title, synopsis, duration, rating, release_date))
+
+def insertMovie(table, title, original_title, synopsis, duration, rating, release_date):
+    cnx = connectToDatabase()
+    cursor = createCursor(cnx)
+    cursor.execute(insertMovieQuery(table, title, original_title, synopsis, duration, rating, release_date))
+    cnx.commit()
+    closeCursor(cursor)
+    disconnectDatabase(cnx)
+
 def printPerson(person):
     print("#{}: {} {}".format(person['id'], person['firstname'], person['lastname']))
 
@@ -82,6 +93,16 @@ find_parser.add_argument('id' , help='Identifant Ã  rechercher')
 insert_parser = action_subparser.add_parser('insert', help='insérer une donnée dans la database')
 insert_parser.add_argument('--firstname', help='prenom')
 insert_parser.add_argument('--lastname', help='nom de famille')
+# insert_parser.parse_known_args()
+
+insert_parser.add_argument('--title', help='le titre en france')
+insert_parser.add_argument('--original_title', help='titre original')
+insert_parser.add_argument('--synopsis', help='le synopsis du film')
+insert_parser.add_argument('--duration', help='la durée en minute du film')
+insert_parser.add_argument('--rating', help='la classification pour visionnage du public')
+insert_parser.add_argument('--production_budget', help='le budget du film')
+insert_parser.add_argument('--marketing_budget', help='le budget pour la promo du film')
+insert_parser.add_argument('--release_date', help='la date de sortie')
 
 args = parser.parse_args()
 
@@ -102,7 +123,7 @@ if args.context == "people":
         people = find("people", peopleId)
         for person in people:
             printPerson(person)
-    if args.action == 'insert':
+    if args.action == "insert":
         if args.firstname and args.lastname:
             insertPeople("people", args.firstname, args.lastname)
             print('insert')
@@ -117,3 +138,7 @@ if args.context == "movies":
         movies = find("movies", movieId)
         for movie in movies:
             printMovie(movie)
+    if args.action == "insert":
+        if args.title:
+            insertMovie("movies", args.title, args.original_title, args.synopsis, args.duration, args.rating, args.release_date)
+            print('insert')

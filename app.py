@@ -61,13 +61,13 @@ def insertPeople(table, firstname, lastname):
     closeCursor(cursor)
     disconnectDatabase(cnx)
 
-def insertMovieQuery(table, title, original_title, synopsis, duration, rating, release_date):
-    return ("INSERT INTO {} (title, original_title, synopsis, duration, rating, release_date) VALUES('{}', '{}', '{}', '{}', '{}','{}')".format(table, title, original_title, synopsis, duration, rating, release_date))
+def insertMovieQuery(table, title, original_title, duration, rating, release_date):
+    return ("INSERT INTO {} (title, original_title, duration, rating, release_date) VALUES('{}', '{}', '{}', '{}', '{}')".format(table, title, original_title, duration, rating, release_date))
 
-def insertMovie(table, title, original_title, synopsis, duration, rating, release_date):
+def insertMovie(table, title, original_title, duration, rating, release_date):
     cnx = connectToDatabase()
     cursor = createCursor(cnx)
-    cursor.execute(insertMovieQuery(table, title, original_title, synopsis, duration, rating, release_date))
+    cursor.execute(insertMovieQuery(table, title, original_title, duration, rating, release_date))
     cnx.commit()
     closeCursor(cursor)
     disconnectDatabase(cnx)
@@ -103,6 +103,9 @@ insert_parser.add_argument('--rating', help='la classification pour visionnage d
 insert_parser.add_argument('--production_budget', help='le budget du film')
 insert_parser.add_argument('--marketing_budget', help='le budget pour la promo du film')
 insert_parser.add_argument('--release_date', help='la date de sortie')
+
+import_parser = action_subparser.add_parser('import', help='Importer de nouvelles données')
+import_parser.add_argument('--file', help='nom du fichier à recuperer')
 
 args = parser.parse_args()
 
@@ -140,5 +143,12 @@ if args.context == "movies":
             printMovie(movie)
     if args.action == "insert":
         if args.title:
-            insertMovie("movies", args.title, args.original_title, args.synopsis, args.duration, args.rating, args.release_date)
+            insertMovie("movies", args.title, args.original_title, args.duration, args.rating, args.release_date)
             print('insert')
+    if args.action == "import":
+        if args.file:
+            with open(args.file) as csvfile:
+                csv_reader = csv.DictReader(csvfile, delimiter=',')
+                for row in csv_reader:
+                    insertMovie("movies", row['title'], row['original_title'], row['duration'], row['rating'], row['release_date'])
+                    print(', '.join(row))

@@ -50,6 +50,17 @@ def findAll(table):
     disconnectDatabase(cnx)
     return results
 
+def insertPeopleQuery(table, firstname, lastname):
+    return ("INSERT INTO {} (firstname, lastname) VALUES('{}', '{}')".format(table, firstname, lastname))
+
+def insertPeople(table, firstname, lastname):
+    cnx = connectToDatabase()
+    cursor = createCursor(cnx)
+    cursor.execute(insertPeopleQuery(table, firstname, lastname))
+    cnx.commit()
+    closeCursor(cursor)
+    disconnectDatabase(cnx)
+
 def printPerson(person):
     print("#{}: {} {}".format(person['id'], person['firstname'], person['lastname']))
 
@@ -67,6 +78,10 @@ list_parser.add_argument('--export' , help='Chemin du fichier exportÃ©')
 
 find_parser = action_subparser.add_parser('find', help='Trouve une entitÃ© selon un paramÃ¨tre')
 find_parser.add_argument('id' , help='Identifant Ã  rechercher')
+
+insert_parser = action_subparser.add_parser('insert', help='insérer une donnée dans la database')
+insert_parser.add_argument('--firstname', help='prenom')
+insert_parser.add_argument('--lastname', help='nom de famille')
 
 args = parser.parse_args()
 
@@ -87,6 +102,10 @@ if args.context == "people":
         people = find("people", peopleId)
         for person in people:
             printPerson(person)
+    if args.action == 'insert':
+        if args.firstname and args.lastname:
+            insertPeople("people", args.firstname, args.lastname)
+            print('insert')
 
 if args.context == "movies":
     if args.action == "list":  

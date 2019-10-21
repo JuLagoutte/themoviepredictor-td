@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python 
+# --> (c'est un shebang)
 # -*- coding: utf-8 -*-
 
 """
@@ -11,71 +12,72 @@ import sys
 import argparse
 import csv
 
-def connectToDatabase():
+def connect_to_database():
     return mysql.connector.connect(user='predictor', password='predictor',
                               host='127.0.0.1',
                               database='predictor')
 
-def disconnectDatabase(cnx):
+def disconnect_database(cnx):
     cnx.close()
 
-def createCursor(cnx):
+def create_cursor(cnx):
     return cnx.cursor(dictionary=True)
 
-def closeCursor(cursor):    
+def close_cursor(cursor):    
     cursor.close()
 
-def findQuery(table, id):
-    return ("SELECT * FROM {} WHERE id = {}".format(table, id))
+def find_query(table, id):
+    return (f"SELECT * FROM '{table}' WHERE id = {id}")
 
-def findAllQuery(table):
-    return ("SELECT * FROM {}".format(table))
+def find_all_query(table):
+    return (f"SELECT * FROM '{table}'")
 
 def find(table, id):
-    cnx = connectToDatabase()
-    cursor = createCursor(cnx)
-    query = findQuery(table, id)
-    cursor.execute(query)
+    cnx = connect_to_database()
+    cursor = create_cursor(cnx)
+    query = find_query(table, id)
+    cursor.executemany(query)
     results = cursor.fetchall()
-    closeCursor(cursor)
-    disconnectDatabase(cnx)
+    close_cursor(cursor)
+    disconnect_database(cnx)
     return results
 
-def findAll(table):
-    cnx = connectToDatabase()
-    cursor = createCursor(cnx)
-    cursor.execute(findAllQuery(table))
+def find_all(table):
+    cnx = connect_to_database()
+    cursor = create_cursor(cnx)
+    cursor.execute(find_all_query(table))
     results = cursor.fetchall()
-    closeCursor(cursor)
-    disconnectDatabase(cnx)
+    close_cursor(cursor)
+    disconnect_database(cnx)
     return results
 
-def insertPeopleQuery(table, firstname, lastname):
-    return ("INSERT INTO {} (firstname, lastname) VALUES('{}', '{}')".format(table, firstname, lastname))
+def insert_people_query(firstname, lastname):
+    return (f"INSERT INTO 'people' (firstname, lastname) VALUES('{firstname}', '{lastname}');")
 
-def insertPeople(table, firstname, lastname):
-    cnx = connectToDatabase()
-    cursor = createCursor(cnx)
-    cursor.execute(insertPeopleQuery(table, firstname, lastname))
+def insert_people(firstname, lastname):
+    # pas besoin de signifier la table car c'est forcément la table People
+    cnx = connect_to_database()
+    cursor = create_cursor(cnx)
+    cursor.execute(insert_people_query(firstname, lastname))
     cnx.commit()
-    closeCursor(cursor)
-    disconnectDatabase(cnx)
+    close_cursor(cursor)
+    disconnect_database(cnx)
 
-def insertMovieQuery(table, title, original_title, duration, rating, release_date):
-    return ("INSERT INTO {} (title, original_title, duration, rating, release_date) VALUES('{}', '{}', '{}', '{}', '{}')".format(table, title, original_title, duration, rating, release_date))
+def insert_movie_query(title, original_title, duration, rating, release_date):
+    return (f"INSERT INTO 'movies' (title, original_title, duration, rating, release_date) VALUES('{title}', '{original_title}', '{duration}', '{rating}', '{release_date}')")
 
-def insertMovie(table, title, original_title, duration, rating, release_date):
-    cnx = connectToDatabase()
-    cursor = createCursor(cnx)
-    cursor.execute(insertMovieQuery(table, title, original_title, duration, rating, release_date))
+def insert_movie(title, original_title, duration, rating, release_date):
+    cnx = connect_to_database()
+    cursor = create_cursor(cnx)
+    cursor.execute(insert_movie_query(title, original_title, duration, rating, release_date))
     cnx.commit()
-    closeCursor(cursor)
-    disconnectDatabase(cnx)
+    close_cursor(cursor)
+    disconnect_database(cnx)
 
-def printPerson(person):
+def print_person(person):
     print("#{}: {} {}".format(person['id'], person['firstname'], person['lastname']))
 
-def printMovie(movie):
+def print_movie(movie):
     print("#{}: {} released on {}".format(movie['id'], movie['title'], movie['release_date']))
 
 parser = argparse.ArgumentParser(description='Process MoviePredictor data')
@@ -111,7 +113,7 @@ args = parser.parse_args()
 
 if args.context == "people":
     if args.action == "list":
-        people = findAll("people")
+        people = find_all("people")
         if args.export:
             with open(args.export, 'w', encoding='utf-8', newline='\n') as csvfile:
                 writer = csv.writer(csvfile)
@@ -120,35 +122,35 @@ if args.context == "people":
                     writer.writerow(person.values())
         else:
             for person in people:
-                printPerson(person)
+                print_person(person)
     if args.action == "find":
         peopleId = args.id
         people = find("people", peopleId)
         for person in people:
-            printPerson(person)
+            print_person(person)
     if args.action == "insert":
         if args.firstname and args.lastname:
-            insertPeople("people", args.firstname, args.lastname)
+            insert_people(args.firstname, args.lastname)
             print('insert')
 
 if args.context == "movies":
     if args.action == "list":  
-        movies = findAll("movies")
+        movies = find_all("movies")
         for movie in movies:
-            printMovie(movie)
+            print_movie(movie)
     if args.action == "find":  
         movieId = args.id
         movies = find("movies", movieId)
         for movie in movies:
-            printMovie(movie)
+            print_movie(movie)
     if args.action == "insert":
         if args.title:
-            insertMovie("movies", args.title, args.original_title, args.duration, args.rating, args.release_date)
+            insert_movie(args.title, args.original_title, args.duration, args.rating, args.release_date)
             print('insert')
     if args.action == "import":
         if args.file:
             with open(args.file) as csvfile:
                 csv_reader = csv.DictReader(csvfile, delimiter=',')
                 for row in csv_reader:
-                    insertMovie("movies", row['title'], row['original_title'], row['duration'], row['rating'], row['release_date'])
+                    insert_movie(row['title'], row['original_title'], row['duration'], row['rating'], row['release_date'])
                     print(', '.join(row))

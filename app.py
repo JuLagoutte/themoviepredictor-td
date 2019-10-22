@@ -11,6 +11,13 @@ import mysql.connector
 import sys
 import argparse
 import csv
+import requests
+from bs4 import BeautifulSoup
+
+r = requests.get('https://fr.wikipedia.org/wiki/Joker_(film,_2019)')
+soup = BeautifulSoup(r.text)
+print(soup)
+exit()
 
 def connect_to_database():
     return mysql.connector.connect(user='predictor', password='predictor',
@@ -148,12 +155,24 @@ if args.context == "movies":
             print_movie(movie)
     if args.action == "insert":
         if args.title:
-            insert_movie(args.title, args.original_title, args.duration, args.rating, args.release_date)
+            insert_movie(
+                args.title, 
+                args.original_title, 
+                args.duration, 
+                args.rating, 
+                args.release_date
+            )
             print('insert')
     if args.action == "import":
         if args.file:
             with open(args.file) as csvfile:
                 csv_reader = csv.DictReader(csvfile, delimiter=',')
                 for row in csv_reader:
-                    insert_movie(row['title'], row['original_title'], row['duration'], row['rating'], row['release_date'])
+                    insert_movie(
+                        row['title'], 
+                        row['original_title'], 
+                        row['duration'], 
+                        row['rating'], 
+                        row['release_date']
+                    )
                     print(', '.join(row))

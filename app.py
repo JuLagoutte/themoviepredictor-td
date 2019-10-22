@@ -27,10 +27,10 @@ def close_cursor(cursor):
     cursor.close()
 
 def find_query(table, id):
-    return (f"SELECT * FROM '{table}' WHERE id = {id}")
+    return (f"SELECT * FROM {table} WHERE id = {id}")
 
 def find_all_query(table):
-    return (f"SELECT * FROM '{table}'")
+    return (f"SELECT * FROM {table}")
 
 def find(table, id):
     cnx = connect_to_database()
@@ -52,7 +52,7 @@ def find_all(table):
     return results
 
 def insert_people_query(firstname, lastname):
-    return (f"INSERT INTO 'people' (firstname, lastname) VALUES('{firstname}', '{lastname}');")
+    return (f"INSERT INTO people (firstname, lastname) VALUES('{firstname}', '{lastname}');")
 
 def insert_people(firstname, lastname):
     # pas besoin de signifier la table car c'est forcément la table People
@@ -64,7 +64,7 @@ def insert_people(firstname, lastname):
     disconnect_database(cnx)
 
 def insert_movie_query(title, original_title, duration, rating, release_date):
-    return (f"INSERT INTO 'movies' (title, original_title, duration, rating, release_date) VALUES('{title}', '{original_title}', '{duration}', '{rating}', '{release_date}')")
+    return (f"INSERT INTO movies (title, original_title, duration, rating, release_date) VALUES('{title}', '{original_title}', '{duration}', '{rating}', '{release_date}')")
 
 def insert_movie(title, original_title, duration, rating, release_date):
     cnx = connect_to_database()
@@ -93,18 +93,21 @@ find_parser = action_subparser.add_parser('find', help='Trouve une entitÃ© sel
 find_parser.add_argument('id' , help='Identifant Ã  rechercher')
 
 insert_parser = action_subparser.add_parser('insert', help='insérer une donnée dans la database')
-insert_parser.add_argument('--firstname', help='prenom')
-insert_parser.add_argument('--lastname', help='nom de famille')
-# insert_parser.parse_known_args()
+know_args = parser.parse_known_args()[0]
 
-insert_parser.add_argument('--title', help='le titre en france')
-insert_parser.add_argument('--original_title', help='titre original')
-insert_parser.add_argument('--synopsis', help='le synopsis du film')
-insert_parser.add_argument('--duration', help='la durée en minute du film')
-insert_parser.add_argument('--rating', help='la classification pour visionnage du public')
-insert_parser.add_argument('--production_budget', help='le budget du film')
-insert_parser.add_argument('--marketing_budget', help='le budget pour la promo du film')
-insert_parser.add_argument('--release_date', help='la date de sortie')
+if know_args.context == "people":
+    insert_parser.add_argument('--firstname', help='prenom', required=True)
+    insert_parser.add_argument('--lastname', help='nom de famille', required=True)
+
+if know_args.context == "movies":
+    insert_parser.add_argument('--title', help='le titre en france', required=True)
+    insert_parser.add_argument('--original_title', help='titre original', required=True)
+    insert_parser.add_argument('--synopsis', help='le synopsis du film')
+    insert_parser.add_argument('--duration', help='la durée en minute du film', required=True)
+    insert_parser.add_argument('--rating', help='la classification pour visionnage du public', choices=('TP', '-12', '-16', '-18'), required=True)
+    insert_parser.add_argument('--production_budget', help='le budget du film')
+    insert_parser.add_argument('--marketing_budget', help='le budget pour la promo du film')
+    insert_parser.add_argument('--release_date', help='la date de sortie', required=True)
 
 import_parser = action_subparser.add_parser('import', help='Importer de nouvelles données')
 import_parser.add_argument('--file', help='nom du fichier à recuperer')

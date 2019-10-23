@@ -7,8 +7,14 @@ from bs4 import BeautifulSoup
 from pprint import pprint 
 from datetime import datetime
 import locale
+import isodate
 
+# class Scrapper:
+#     def __init__(self, url):
+#         self.url = url
 
+#     def scrap(self):
+        
 # https://www.imdb.com/title/tt0456123/  Dikkenek
 # https://www.imdb.com/title/tt2527338/  Star Wars
 # https://www.imdb.com/title/tt7286456/  Joker
@@ -16,7 +22,7 @@ import locale
 locale.setlocale(locale.LC_ALL, 'en_US')
 
 
-r = requests.get("https://www.imdb.com/title/tt0456124/", headers={'Accept-Language' : "fr-FR"})
+r = requests.get("https://www.imdb.com/title/tt0456125/", headers={'Accept-Language' : "fr-FR"})
 soup = BeautifulSoup(r.content, 'html.parser')
 
 title_wrapper = soup.find(class_="title_wrapper")
@@ -46,14 +52,9 @@ elif rating_string.find('18') != -1:
 else:
     rating = 'TP'
 
-duration_class = rating_class.find_next("time")
-# duration_s = isodate.parse_duration("PT84M")
-# duration = int(duration_s.total_seconds()/60)
-splitted_duration = duration_class.get_text().split('h')
-h_splitted_duration = int(splitted_duration[0])*60
-m_splitted_duration = int(splitted_duration[1].replace('min', ''))
-duration = h_splitted_duration + m_splitted_duration
-# ne fonctionne pas si le film dure moins de 1h
+duration_class = rating_class.find_next("time")["datetime"]
+duration_s = isodate.parse_duration(duration_class)
+duration = int(duration_s.total_seconds()/60)
 
 release_date_class = soup.find(title="See more release dates")
 splitted_release_date = release_date_class.get_text().split('(')

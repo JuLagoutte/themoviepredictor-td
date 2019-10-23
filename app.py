@@ -17,7 +17,6 @@ from pprint import pprint
 from datetime import datetime
 import locale
 
-import scrap
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 

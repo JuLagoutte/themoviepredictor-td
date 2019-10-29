@@ -16,8 +16,9 @@ from bs4 import BeautifulSoup
 from pprint import pprint 
 from datetime import datetime
 import locale
+
 from movie import Movie
-from people import Person
+from person import Person
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 
@@ -96,32 +97,27 @@ def find(table, id):
     query = find_query(table, id)
     cursor.execute(query)
     results = cursor.fetchall()
-    # entity = None
-    movie = None
-    person = None
+    entity = None
     if (table == "movies"):
         if (cursor.rowcount == 1):
             row = results[0]
-            movie = Movie(row['title'],
+            entity = Movie(row['title'],
                           row['original_title'],
                           row['duration'],
                           row['release_date'],
                           row['rating']
             )
-            movie.id = row['id']
-        close_cursor(cursor)
-        disconnect_database(cnx)
-        return movie
+            entity.id = row['id']
     if (table == "people"):
         if (cursor.rowcount == 1):
             row = results[0]
-            person = Person(row['firstname'],
+            entity = Person(row['firstname'],
                             row['lastname'],
             )
-            person.id = row['id']
-        close_cursor(cursor)
-        disconnect_database(cnx)
-        return person
+            entity.id = row['id']
+    close_cursor(cursor)
+    disconnect_database(cnx)
+    return entity
 
 def find_all(table):
     cnx = connect_to_database()
@@ -225,9 +221,9 @@ if args.context == "people":
         if args.export:
             with open(args.export, 'w', encoding='utf-8', newline='\n') as csvfile:
                 writer = csv.writer(csvfile)
-                writer.writerow(people[0].keys())
+                writer.writerow(people[0].__dict__.keys())
                 for person in people:
-                    writer.writerow(person.values())
+                    writer.writerow(person.__dict__.values())
         else:
             for person in people:
                 print_person(person)
@@ -268,7 +264,12 @@ if args.context == "movies":
         movie.id = insert_movie(movie)
         print('insert')
 
+
+
+########################################################################
+
     # action "import", pour importer une base de données à partir d'un fichier csv
+
     # if args.action == "import":
     #     if args.file:
     #         with open(args.file) as csvfile:

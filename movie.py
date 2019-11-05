@@ -1,11 +1,14 @@
 class Movie:
-    def __init__(self, title, original_title, duration, release_date, rating):
+    def __init__(self, title, original_title, duration, release_date, rating, box_office, omdb_id, imdb_rating):
         self.id = None
         self.title = title
         self.original_title = original_title
         self.duration = duration
         self.release_date = release_date
         self.rating = rating
+        self.box_office = box_office
+        self.omdb_id = omdb_id
+        self.imdb_rating = imdb_rating
 
         self.actors = []  # création liste vide car on sait qu'il y a des acteurs dans le film mais on ne connaît pas encore lesquels
         self.productors = []

@@ -1,11 +1,11 @@
 class Movie:
-    def __init__(self, omdb_id, title, original_title, duration, release_date, rating, imdb_score, box_office):
+    def __init__(self, omdb_id, title, original_title, duration, release_date, imdb_score, box_office):
         self.id = None
         self.title = title
         self.original_title = original_title
         self.duration = duration
         self.release_date = release_date
-        self.rating = rating
+        self.rating = None
         self.box_office = box_office
         self.omdb_id = omdb_id
         self.imdb_score = imdb_score

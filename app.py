@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 from pprint import pprint 
 from datetime import datetime
 import locale
+import os
 
 from movie import Movie
 from person import Person
@@ -24,9 +25,11 @@ from omdb import Omdb
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 
 def connect_to_database():
-    return mysql.connector.connect(user='predictor', password='predictor',
-                              host='127.0.0.1',
-                              database='predictor')
+    password = os.environ['MYSQL_PASSWORD']
+    return mysql.connector.connect(user='predictor', 
+                                password=password,
+                                host='database',
+                                database='predictor')
 
 def disconnect_database(cnx):
     cnx.close()

@@ -21,8 +21,15 @@ import os
 from movie import Movie
 from person import Person
 from omdb import Omdb
+from tmdb import TheMoviedb
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
+
+api_key_tmdb = os.environ['TMDB_API_KEY']
+tmdb = TheMoviedb(api_key_tmdb)
+
+api_key_omdb = os.environ['OMDB_API_KEY']
+omdb = Omdb(api_key_omdb)
 
 def connect_to_database():
     password = os.environ['MYSQL_PASSWORD']
@@ -56,7 +63,7 @@ def find(table, id):
     if (table == "movies"):
         if (cursor.rowcount == 1):
             row = results[0]
-            entity = Movie(row['omdb_id'],
+            entity = Movie(row['imdb_id'],
                         row['title'],
                         row['original_title'],
                         row['duration'],
@@ -88,7 +95,7 @@ def find_all(table):
         movies = []
         for result in results: # dico avec Id, title...
             movie = Movie(
-                omdb_id = result['omdb_id'], 
+                imdb_id = result['imdb_id'], 
                 title = result['title'], 
                 original_title = result['original_title'],
                 duration = result['duration'],
@@ -132,9 +139,9 @@ def insert_people(person):
 
 def insert_movie_query(movie):
     add_movie = ("INSERT INTO movies "
-                "(omdb_id, title, original_title, duration, release_date, rating, imdb_score, box_office) "
+                "(imdb_id, title, original_title, duration, release_date, rating, imdb_score, box_office) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
-    data_movie = (movie.omdb_id, movie.title, movie.original_title, movie.duration, movie.release_date, movie.rating, movie.imdb_score, movie.box_office)
+    data_movie = (movie.imdb_id, movie.title, movie.original_title, movie.duration, movie.release_date, movie.rating, movie.imdb_score, movie.box_office)
     return (add_movie, data_movie)
 
 def insert_movie(movie):
@@ -176,7 +183,12 @@ know_args = parser.parse_known_args()[0]
 
 if know_args.api == 'omdb':
     year_parser = import_parser.add_argument('--year', help='année des films recherchés')
-    imdbId_parser = import_parser.add_argument('--imdbId', help='Id du film recherché sur API')
+    imdbId_parser = import_parser.add_argument('--imdb_id', help='Id du film recherché sur API')
+
+if know_args.api == 'themoviedb':
+    year_parser = import_parser.add_argument('--year', help='année des films recherchés')
+    imdbId_parser = import_parser.add_argument('--imdb_id', help='Id du film recherché sur API')
+
 
 if know_args.context == "people":
     insert_parser.add_argument('--firstname', help='prenom', required=True)
@@ -240,7 +252,7 @@ if args.context == "movies":
                     args.release_date, 
                     args.rating,
                     args.box_office,
-                    args.omdb_id, 
+                    args.imdb_id, 
                     args.imdb_score
         )
         movie.id = insert_movie(movie)
@@ -260,13 +272,17 @@ if args.context == "movies":
         #                 row['rating'], 
         #                 row['release_date'],
         #                 row['box_office'],
-        #                 row['omdb_id'], 
+        #                 row['imdb_id'], 
         #                 row['imdb_score']
         #             )
         #             print(', '.join(row))
         if args.api == 'omdb':
-            if args.imdbId :
-                omdb = Omdb()
-                movie = omdb.omdb_get_by_id(args.imdbId)
+            if args.imdb_id :
+                movie = omdb.omdb_get_by_id(args.imdb_id, api_key_omdb)
+                insert_movie(movie)
+                print(f"insert {movie.id}")
+        if args.api == 'themoviedb':
+            if args.imdb_id :
+                movie = tmdb.tmdb_get_by_id(args.imdb_id, api_key_tmdb)
                 insert_movie(movie)
                 print(f"insert {movie.id}")

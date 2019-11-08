@@ -10,6 +10,8 @@ services:
     networks: 
       - database_net
     command: tail -f /dev/null
+    depends_on: 
+      - database
   database:
     image: mysql:latest
     environment:

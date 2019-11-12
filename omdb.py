@@ -18,8 +18,8 @@ class Omdb:
     def __init__(self, api_key):
         self.api_key = api_key
 
-    def omdb_get_by_id(self, id, api_key):
-        r = requests.get(f'http://www.omdbapi.com/?i={id}&apikey={api_key}')
+    def omdb_get_by_id(self, id):
+        r = requests.get(f'http://www.omdbapi.com/?i={id}&apikey={self.api_key}')
         r = r.json()
         if r['Response'] == "False":
             movie = f"Aucun film avec l'id {id} n'existe dans OMDBapi"
@@ -49,8 +49,31 @@ class Omdb:
             else:
                 box_office = None
             imdb_score = r['imdbRating']
+            popularity = r['imdbVotes']
+            synopsis = r['Plot']
+            production_budget = None
+            marketing_budget = None
+            tagline = None
+            awards = r['Awards']
+            genre = r['Genre']
+            is_3D = None
 
-            movie = Movie(imdb_id, title, original_title, duration, release_date, rating, imdb_score, box_office)
+            movie = Movie(imdb_id, 
+                title, 
+                original_title, 
+                genre, 
+                synopsis, 
+                tagline, 
+                duration, 
+                production_budget, 
+                marketing_budget, 
+                release_date, 
+                rating, 
+                imdb_score, 
+                box_office,
+                popularity,
+                awards,
+                is_3D)
             return movie
 
     # def omdb_gat_by_year(self, year):

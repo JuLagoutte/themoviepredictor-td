@@ -17,11 +17,13 @@ from pprint import pprint
 from datetime import datetime
 import locale
 import os
+import random
 
 from movie import Movie
 from person import Person
 from omdb import Omdb
 from tmdb import TheMoviedb
+from all_api import All_api
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 
@@ -30,6 +32,19 @@ tmdb = TheMoviedb(api_key_tmdb)
 
 api_key_omdb = os.environ['OMDB_API_KEY']
 omdb = Omdb(api_key_omdb)
+
+# a = random.randint(0, 9)
+# b = random.randint(0, 9)
+# c = random.randint(0, 9)
+# d = random.randint(0, 9)
+# e = random.randint(0, 9)
+# f = random.randint(0, 9)
+# g = random.randint(0, 9)
+# imdb_id = f"tt{a}{b}{c}{d}{e}{f}{g}"
+# print(imdb_id)
+# exit()
+
+all_api = All_api(api_key_tmdb, api_key_omdb)
 
 def connect_to_database():
     password = os.environ['MYSQL_PASSWORD']
@@ -66,11 +81,19 @@ def find(table, id):
             entity = Movie(row['imdb_id'],
                         row['title'],
                         row['original_title'],
+                        row['genre'],
+                        row['synopsis'],
+                        row['tagline'],
                         row['duration'],
+                        row['production_budget'],
+                        row['marketing_budget'],
                         row['release_date'],
                         row['rating'],
                         row['imdb_score'],
-                        row['box_office'] 
+                        row['box_office'],
+                        row['popularity'],
+                        row['awards'],
+                        row['is_3D']
             )
             entity.id = row['id']
     if (table == "people"):
@@ -98,11 +121,19 @@ def find_all(table):
                 imdb_id = result['imdb_id'], 
                 title = result['title'], 
                 original_title = result['original_title'],
+                genre = result['genre'],
+                synopsis = result['synopsis'],
+                tagline = result['tagline'],
                 duration = result['duration'],
+                production_budget = result['production_budget'],
+                marketing_budget = result['marketing_budget'],
                 release_date = result['release_date'],
                 rating = result['rating'],
                 imdb_score = result['imdb_score'],
-                box_office = result['box_office']
+                box_office = result['box_office'],
+                popularity = result['popularity'],
+                awards = result['awards'],
+                is_3D = result['is_3D']
             )
             movie.id = result['id']
             movies.append(movie)
@@ -139,9 +170,9 @@ def insert_people(person):
 
 def insert_movie_query(movie):
     add_movie = ("INSERT INTO movies "
-                "(imdb_id, title, original_title, duration, release_date, rating, imdb_score, box_office) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
-    data_movie = (movie.imdb_id, movie.title, movie.original_title, movie.duration, movie.release_date, movie.rating, movie.imdb_score, movie.box_office)
+                "(imdb_id, title, original_title, genre, synopsis, tagline, duration, production_budget, marketing_budget, release_date, rating, imdb_score, box_office, popularity, awards, is_3D) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+    data_movie = (movie.imdb_id, movie.title, movie.original_title, movie.genre, movie.synopsis, movie.tagline, movie.duration, movie.production_budget, movie.marketing_budget, movie.release_date, movie.rating, movie.imdb_score, movie.box_office, movie.popularity, movie.awards, movie.is_3D)
     return (add_movie, data_movie)
 
 def insert_movie(movie):
@@ -189,6 +220,9 @@ if know_args.api == 'themoviedb':
     year_parser = import_parser.add_argument('--year', help='année des films recherchés')
     imdbId_parser = import_parser.add_argument('--imdb_id', help='Id du film recherché sur API')
 
+if know_args.api == 'all_api':
+    year_parser = import_parser.add_argument('--year', help='année des films recherchés')
+    imdbId_parser = import_parser.add_argument('--imdb_id', help='Id du film recherché sur les API')
 
 if know_args.context == "people":
     insert_parser.add_argument('--firstname', help='prenom', required=True)
@@ -248,10 +282,18 @@ if args.context == "movies":
     if args.action == "insert":
         movie = Movie(args.title, 
                     args.original_title, 
-                    args.duration, 
+                    args.genre,
+                    args.synopsis,
+                    args.tagline,
+                    args.duration,
+                    args.production_budget,
+                    args.marketing_budget,
                     args.release_date, 
                     args.rating,
                     args.box_office,
+                    args.popularity,
+                    args.awards,
+                    args.is_3D,
                     args.imdb_id, 
                     args.imdb_score
         )
@@ -266,23 +308,49 @@ if args.context == "movies":
         #         csv_reader = csv.DictReader(csvfile, delimiter=',')
         #         for row in csv_reader:
         #             insert_movie(
-        #                 row['title'], 
-        #                 row['original_title'], 
-        #                 row['duration'], 
-        #                 row['rating'], 
+        #                 row['title'],
+        #                 row['original_title'],
+        #                 row['genre'],
+        #                 row['synopsis'],
+        #                 row['tagline'],
+        #                 row['duration'],
+        #                 row['production_budget'],
+        #                 row['marketing_budget'],
         #                 row['release_date'],
+        #                 row['rating'],
+        #                 row['imdb_score'],
         #                 row['box_office'],
-        #                 row['imdb_id'], 
-        #                 row['imdb_score']
+        #                 row['popularity'],
+        #                 row['awards'],
+        #                 row['is_3D']
         #             )
         #             print(', '.join(row))
         if args.api == 'omdb':
             if args.imdb_id :
-                movie = omdb.omdb_get_by_id(args.imdb_id, api_key_omdb)
+                movie = omdb.omdb_get_by_id(args.imdb_id)
                 insert_movie(movie)
                 print(f"insert {movie.id}")
-        if args.api == 'themoviedb':
+        elif args.api == 'themoviedb':
             if args.imdb_id :
-                movie = tmdb.tmdb_get_by_id(args.imdb_id, api_key_tmdb)
+                movie = tmdb.tmdb_get_by_id(args.imdb_id)
                 insert_movie(movie)
                 print(f"insert {movie.id}")
+        elif args.api == 'all_api':
+            if args.imdb_id:
+                if args.imdb_id == 'random':
+                    a = random.randint(0, 9)
+                    b = random.randint(0, 9)
+                    c = random.randint(0, 9)
+                    d = random.randint(0, 9)
+                    e = random.randint(0, 9)
+                    f = random.randint(0, 9)
+                    g = random.randint(0, 9)
+                    searched_id = f"tt{a}{b}{c}{d}{e}{f}{g}"
+                    movie = all_api.get_by_id_imdb(searched_id)
+                    insert_movie(movie)
+                    print(f"insert {movie.id}")
+                else:
+                    movie = all_api.get_by_id_imdb(args.imdb_id)
+                    insert_movie(movie)
+                    print(f"insert {movie.id}")
+        

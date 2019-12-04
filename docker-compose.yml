@@ -1,25 +1,25 @@
 version: '3.7'
 
 services:
-  app:
-    build: .
-    env_file:
-      - auth.env 
-    volumes:
-      - .:/usr/src/themoviepredictor
-    networks: 
-      - database_net
-    command: tail -f /dev/null
-    depends_on: 
-      - database
+  # app:
+  #   build: .
+  #   env_file:
+  #     - auth.env 
+  #   volumes:
+  #     - .:/usr/src/themoviepredictor
+  #   networks: 
+  #     - database_net
+  #   command: tail -f /dev/null
+  #   depends_on: 
+  #     - database
   database:
     image: mysql:latest
     environment:
       - auth.env
     networks:
       - database_net
-    # ports:
-    #   - 3306:3306
+    ports:
+      - 3306:3306
     # plus besoin de publier le port puisqu'on n'éxécute plus le script python sur notre machine en local mais dans le container
     volumes:
       - database_data:/var/lib/mysql

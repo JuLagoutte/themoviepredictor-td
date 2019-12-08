@@ -24,43 +24,28 @@ from person import Person
 from omdb import Omdb
 from tmdb import TheMoviedb
 from all_api import All_api
+from setparser import Parser
+from db import Db
+
+# if you work out the container
+from dotenv import load_dotenv
+from pathlib import Path  # python3 only
+load_dotenv()
+env_path = Path('.') / 'auth.env'
+load_dotenv(dotenv_path=env_path)
+#####################################
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 
-api_key_tmdb = os.environ['TMDB_API_KEY']
+api_key_tmdb = os.getenv('TMDB_API_KEY')
 tmdb = TheMoviedb(api_key_tmdb)
 
-api_key_omdb = os.environ['OMDB_API_KEY']
+api_key_omdb = os.getenv('OMDB_API_KEY')
 omdb = Omdb(api_key_omdb)
-
-# a = random.randint(0, 9)
-# b = random.randint(0, 9)
-# c = random.randint(0, 9)
-# d = random.randint(0, 9)
-# e = random.randint(0, 9)
-# f = random.randint(0, 9)
-# g = random.randint(0, 9)
-# imdb_id = f"tt{a}{b}{c}{d}{e}{f}{g}"
-# print(imdb_id)
-# exit()
 
 all_api = All_api(api_key_tmdb, api_key_omdb)
 
-def connect_to_database():
-    password = os.environ['MYSQL_PASSWORD']
-    return mysql.connector.connect(user='predictor', 
-                                password=password,
-                                host='database',
-                                database='predictor')
-
-def disconnect_database(cnx):
-    cnx.close()
-
-def create_cursor(cnx):
-    return cnx.cursor(dictionary=True)
-
-def close_cursor(cursor):    
-    cursor.close()
+db = Db()
 
 def find_query(table, id):
     return (f"SELECT * FROM {table} WHERE id = {id} LIMIT 1")
@@ -69,8 +54,8 @@ def find_all_query(table):
     return (f"SELECT * FROM {table}")
 
 def find(table, id):
-    cnx = connect_to_database()
-    cursor = create_cursor(cnx)
+    global db
+    cursor = db.get_cursor()
     query = find_query(table, id)
     cursor.execute(query)
     results = cursor.fetchall()
@@ -103,17 +88,13 @@ def find(table, id):
                             row['lastname'],
             )
             entity.id = row['id']
-    close_cursor(cursor)
-    disconnect_database(cnx)
     return entity
 
 def find_all(table):
-    cnx = connect_to_database()
-    cursor = create_cursor(cnx)
+    global db
+    cursor = db.get_cursor()
     cursor.execute(find_all_query(table))
     results = cursor.fetchall() # liste de dictionnaires contenant des valeurs scalaires
-    close_cursor(cursor)
-    disconnect_database(cnx)
     if (table == "movies"):
         movies = []
         for result in results: # dico avec Id, title...
@@ -158,14 +139,12 @@ def insert_people_query(person):
 
 def insert_people(person):
     # pas besoin de signifier la table car c'est forcément la table People
-    cnx = connect_to_database()
-    cursor = create_cursor(cnx)
+    global db
+    cursor = db.get_cursor()
     add_person, data_person = insert_people_query(person)
     cursor.execute(add_person, data_person)
     person.id = cursor.lastrowid
-    cnx.commit()
-    close_cursor(cursor)
-    disconnect_database(cnx)
+    db.commit()
     return cursor.lastrowid
 
 def insert_movie_query(movie):
@@ -176,69 +155,22 @@ def insert_movie_query(movie):
     return (add_movie, data_movie)
 
 def insert_movie(movie):
-    cnx = connect_to_database()
-    cursor = create_cursor(cnx)
+    global db
+    cursor = db.get_cursor()
     add_movie, data_movie = insert_movie_query(movie)
     cursor.execute(add_movie, data_movie)
     movie.id = cursor.lastrowid
-    cnx.commit()
-    close_cursor(cursor)
-    disconnect_database(cnx)
+    db.commit()
     return cursor.lastrowid
 
 def print_person(person):
     print(f"#{person.id}: {person.firstname} {person.lastname}")
 
 def print_movie(movie):
-    print(f"#{movie.id}: {movie.title} released on {movie.release_date}")
+    print(f"#{movie.id}: {movie.title} released on {movie.release_date}")  
 
-parser = argparse.ArgumentParser(description='Process MoviePredictor data')
-
-parser.add_argument('context', choices=['people', 'movies'], help='Le contexte dans lequel nous allons travailler')
-
-action_subparser = parser.add_subparsers(title='action', dest='action')
-
-list_parser = action_subparser.add_parser('list', help='Liste les entitÃ©es du contexte')
-list_parser.add_argument('--export' , help='Chemin du fichier exportÃ©')
-
-find_parser = action_subparser.add_parser('find', help='Trouve une entitÃ© selon un paramÃ¨tre')
-find_parser.add_argument('id' , help='Identifant Ã  rechercher')
-
-insert_parser = action_subparser.add_parser('insert', help='insérer une donnée dans la database')
-
-import_parser = action_subparser.add_parser('import', help='Importer de nouvelles données')
-import_parser.add_argument('--file', help='nom du fichier à recuperer')
-import_parser.add_argument('--api', help='nom de API utilisée')
-
-know_args = parser.parse_known_args()[0]
-
-if know_args.api == 'omdb':
-    year_parser = import_parser.add_argument('--year', help='année des films recherchés')
-    imdbId_parser = import_parser.add_argument('--imdb_id', help='Id du film recherché sur API')
-
-if know_args.api == 'themoviedb':
-    year_parser = import_parser.add_argument('--year', help='année des films recherchés')
-    imdbId_parser = import_parser.add_argument('--imdb_id', help='Id du film recherché sur API')
-
-if know_args.api == 'all_api':
-    year_parser = import_parser.add_argument('--year', help='année des films recherchés')
-    imdbId_parser = import_parser.add_argument('--imdb_id', help='Id du film recherché sur les API')
-
-if know_args.context == "people":
-    insert_parser.add_argument('--firstname', help='prenom', required=True)
-    insert_parser.add_argument('--lastname', help='nom de famille', required=True)
-
-if know_args.context == "movies":
-    insert_parser.add_argument('--title', help='le titre en france', required=True)
-    insert_parser.add_argument('--original_title', help='titre original', required=True)
-    insert_parser.add_argument('--synopsis', help='le synopsis du film')
-    insert_parser.add_argument('--duration', help='la durée en minute du film', required=True)
-    insert_parser.add_argument('--rating', help='la classification pour visionnage du public', choices=('TP', '-12', '-16', '-18'), required=True)
-    insert_parser.add_argument('--production_budget', help='le budget du film')
-    insert_parser.add_argument('--marketing_budget', help='le budget pour la promo du film')
-    insert_parser.add_argument('--release_date', help='la date de sortie', required=True)    
-
-args = parser.parse_args()
+parser = Parser()
+args = parser.set_parser()
 
 if args.context == "people":
     if args.action == "list":
@@ -335,22 +267,22 @@ if args.context == "movies":
                 movie = tmdb.tmdb_get_by_id(args.imdb_id)
                 insert_movie(movie)
                 print(f"insert {movie.id}")
-        elif args.api == 'all_api':
-            if args.imdb_id:
-                if args.imdb_id == 'random':
-                    a = random.randint(0, 9)
-                    b = random.randint(0, 9)
-                    c = random.randint(0, 9)
-                    d = random.randint(0, 9)
-                    e = random.randint(0, 9)
-                    f = random.randint(0, 9)
-                    g = random.randint(0, 9)
-                    searched_id = f"tt{a}{b}{c}{d}{e}{f}{g}"
-                    movie = all_api.get_by_id_imdb(searched_id)
-                    insert_movie(movie)
-                    print(f"insert {movie.id}")
-                else:
-                    movie = all_api.get_by_id_imdb(args.imdb_id)
-                    insert_movie(movie)
-                    print(f"insert {movie.id}")
+        # elif args.api == 'all_api':
+        #     if args.imdb_id:
+        #         if args.imdb_id == 'random':
+        #             a = random.randint(0, 9)
+        #             b = random.randint(0, 9)
+        #             c = random.randint(0, 9)
+        #             d = random.randint(0, 9)
+        #             e = random.randint(0, 9)
+        #             f = random.randint(0, 9)
+        #             g = random.randint(0, 9)
+        #             searched_id = f"tt{a}{b}{c}{d}{e}{f}{g}"
+        #             movie = all_api.get_by_id_imdb(searched_id)
+        #             insert_movie(movie)
+        #             print(f"insert {movie.id}")
+        #         else:
+        #             movie = all_api.get_by_id_imdb(args.imdb_id)
+        #             insert_movie(movie)
+        #             print(f"insert {movie.id}")
         

@@ -28,7 +28,6 @@ class TheMoviedb:
             duration = r['runtime']
             box_office = r['revenue']
             imdb_id = r['imdb_id']
-            imdb_id = imdb_id.replace("tt", "")
             imdb_score = r['vote_average']
             synopsis = r['overview']
             production_budget = r['budget']

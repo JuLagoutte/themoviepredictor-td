@@ -25,8 +25,7 @@ class Omdb:
             movie = f"Aucun film avec l'id {id} n'existe dans OMDBapi"
             return movie
         else:
-            imdb_id_str = r['imdbID']
-            imdb_id = imdb_id_str.replace("tt", "")
+            imdb_id = r['imdbID']
             title = r['Title']
             original_title = r['Title']
             release_date_class = r['Released']

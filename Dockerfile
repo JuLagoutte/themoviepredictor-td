@@ -1,6 +1,6 @@
 FROM python:3.7-alpine
 
-RUN pip install argparse requests mysql-connector-python beautifulsoup4 isodate
+RUN pip install argparse requests mysql-connector-python beautifulsoup4 isodate python-dotenv
 
 COPY . /usr/src/themoviepredictor
 

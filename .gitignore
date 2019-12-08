@@ -209,5 +209,6 @@ $RECYCLE.BIN/
 # Api Key
 omdbapikey.txt
 auth.env
+/datasets_imdb
 
 # End of https://www.gitignore.io/api/vim,linux,macos,python,windows,visualstudiocode

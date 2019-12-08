@@ -11,7 +11,6 @@ from datetime import datetime
 from omdb import Omdb
 from tmdb import TheMoviedb
 
-
 locale.setlocale(locale.LC_ALL, 'en_US')
 
 class All_api :
@@ -28,8 +27,6 @@ class All_api :
 
         if 'status_code' not in r_tmdb and r_omdb['Response'] == "True":
             imdb_id = r_tmdb['imdb_id']
-            imdb_id = imdb_id.replace("tt", "")
-            imdb_id = int(imdb_id)
             title = r_tmdb['title']
             original_title = r_tmdb['original_title']
             genre = r_omdb['Genre']
@@ -75,11 +72,11 @@ class All_api :
             return movie
         
         elif r_tmdb['status_code'] == 34 and r_omdb['Response'] == "True":
-            movie = Omdb.omdb_get_by_id(id)
+            movie = Omdb.omdb_get_by_id(self.api_key_omdb, id)
             # utiliser class Omdb
 
         elif 'status_code' not in r_tmdb and r_omdb['Response'] == "False":
-            movie = TheMoviedb.tmdb_get_by_id(id)
+            movie = TheMoviedb.tmdb_get_by_id(self.api_key_tmdb, id)
             # utiliser class TheMoviedb
 
         else:

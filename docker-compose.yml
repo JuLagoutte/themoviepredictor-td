@@ -14,7 +14,7 @@ services:
   #     - database
   database:
     image: mysql:latest
-    environment:
+    env_file:
       - auth.env
     networks:
       - database_net
